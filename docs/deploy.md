@@ -1,14 +1,3 @@
-# Kubernetes Cluster With RKE On Outscale Cloud
-
-This reprository contain a way to deploy a [kubernetes](https://kubernetes.io/) cluster using [rke](https://rancher.com/docs/rke/) on [Outscale cloud provider](https://outscale.com/).
-
-# Architecture
-
-The Kubernetes cluster is deployed inside a [Net](https://wiki.outscale.net/display/EN/About+VPCs) with three [Subnets](https://wiki.outscale.net/display/EN/Getting+Information+About+Your+Subnets):
-- One subnet (10.0.0.0/24) containing a bastion host, and a [NAT Service](https://wiki.outscale.net/display/EN/About+NAT+Gateways)
-- One subnet (10.0.0.1/24) containing control plane nodes
-- One subnet (10.0.0.2/24) containing woker nodes
-
 # Prerequisite
 
 - [Terraform](https://www.terraform.io/downloads) (>= 0.14)
@@ -47,7 +36,7 @@ scp -F ssh_config rke/kube_config_cluster.yml bastion:.kube/config
 
 Then to complete the cluster initialization, install the CSI driver
 ```
-ANSIBLE_CONFIG=ansible.cfg ansible-playbook -e "region=${OSC_REGION:-eu-west-2}" osc-csi/playbook.yaml
+ANSIBLE_CONFIG=ansible.cfg ansible-playbook osc-csi/playbook.yaml
 ```
 
 Connect to bastion and test kubeapi-server:
@@ -62,23 +51,6 @@ ssh -F ssh_config worker-0
 ssh -F ssh_config control-plane-0
 ```
 
-# Testing
-
-## Smoke tests
-Smoke testing our newly created Kubernetes cluster can be done very similarely to [kubernetes-the-hard-way](https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/13-smoke-test.md).
-
-Note that workers has no public IP so you can test Nodeport service from bastion.
-
-## CCM quicktest
-
-You can test the CCM by creating a LoadBalancer Service:
-```
-scp -F ssh_config examples/2048.yaml bastion:./
-ssh -F ssh_config bastion
-kubectl apply -f 2048.yaml
-kubectl get svc -n 2048
-```
-
 # Cleaning Up
 
 Just run `terraform destroy`.
@@ -89,7 +61,3 @@ Alternatively, you can manually cleanup your resources if something goes wrong:
 - Go to Network/Security->Keypairs and delete Keypairs created for each node
 - Go to Network/Security->External Ips and delete EIP created for each control-planes
 - Go to Compute->Outscale Machine Image and delete created image
-
-# Contributing
-
-Feel free to report an issue.
