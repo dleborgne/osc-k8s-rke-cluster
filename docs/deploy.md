@@ -14,7 +14,7 @@ export TF_VAR_region="eu-west-2"
 ```
 
 
-By editing ['terraform.tfvars'](terraform.tfvars), you can adjust the number of worker/control-plane nodes, size of node and more.
+By editing ['terraform.tfvars'](terraform.tfvars), you can adjust the number of worker/control-plane nodes, the size of the nodes and more.
 
 # Deploy
 
@@ -23,6 +23,9 @@ First deploy infrastructure resources:
 terraform init
 terraform apply
 ```
+
+Check your API Access Rules with the [ReadApiAccessRules](https://docs.outscale.com/api#readapiaccessrules) method to make sure
+that your provisioned NAT IP address is allowed to access the APIs. 
 
 Then you should be able to deploy RKE using:
 ```
@@ -55,7 +58,7 @@ ssh -F ssh_config control-plane-0
 
 # Cleaning Up
 
-Just run `terraform destroy`.
+Run `terraform destroy` then remove generated files in the rke folder with `rm rke/cluster.rkestate rke/kube_config_cluster.yml`.
 
 Alternatively, you can manually cleanup your resources if something goes wrong:
 - Connect to [cockpit interface](https://cockpit.outscale.com/)
