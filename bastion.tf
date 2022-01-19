@@ -70,7 +70,7 @@ resource "outscale_security_group_rule" "bastion-ssh" {
     from_port_range = "22"
     to_port_range   = "22"
     ip_protocol     = "tcp"
-    ip_ranges       = ["0.0.0.0/0"]
+    ip_ranges       = var.trusted_ip
   }
 }
 
