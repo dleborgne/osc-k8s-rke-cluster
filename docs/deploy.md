@@ -27,6 +27,11 @@ terraform apply
 Check your API Access Rules with the [ReadApiAccessRules](https://docs.outscale.com/api#readapiaccessrules) method to make sure
 that your provisioned NAT IP address is allowed to access the APIs. 
 
+If required, you can create an Access Rule for your Kubernetes NAT IP address:
+```
+osc-cli api CreateApiAccessRule --Description 'Allow Kubernetes NAT IP Address' --IpRanges "[$(tf output nat_public_ip | tr -d '\n')]"
+```
+
 Then you should be able to deploy RKE using:
 ```
 rke up --config rke/cluster.yml
