@@ -44,3 +44,4 @@ ssh_config
 rke/*
 cloud-provider-osc/*
 osc-csi/secrets.yaml
+osc-csi/ansible-vars.yaml
