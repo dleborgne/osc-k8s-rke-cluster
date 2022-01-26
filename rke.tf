@@ -140,6 +140,7 @@ addons_include:
   - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-5.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshots.yaml
   - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-5.0/deploy/kubernetes/snapshot-controller/rbac-snapshot-controller.yaml
   - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-5.0/deploy/kubernetes/snapshot-controller/setup-snapshot-controller.yaml
+  - ${path.root}/rke/ingress-default-cert.yaml
 ssh_key_path: ~/.ssh/id_rsa
 ssh_cert_path:
 ssh_agent_auth: false
@@ -151,18 +152,21 @@ enable_cri_dockerd: null
 kubernetes_version: ${var.kubernetes_version}
 private_registries: []
 ingress:
-  provider:
+  provider: nginx
   options: {}
   node_selector: {}
-  extra_args: {}
+  extra_args:
+    default-ssl-certificate: "ingress-nginx/ingress-default-cert"
+    http-port: 80
+    https-port: 443
   dns_policy:
   extra_envs: []
   extra_volumes: []
   extra_volume_mounts: []
   update_strategy: null
-  http_port: 0
-  https_port: 0
-  network_mode:
+  http_port: 
+  https_port: 
+  network_mode: none
   tolerations: []
   default_backend: null
   default_http_backend_priority_class_name:
