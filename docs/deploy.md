@@ -1,7 +1,7 @@
 # Prerequisite
 
 - [Terraform](https://www.terraform.io/downloads) (>= 0.14)
-- [RKE](https://rancher.com/docs/rke/latest/en/installation/) (>= v1.3.2)
+- [RKE](https://rancher.com/docs/rke/latest/en/installation/) (>= v1.3.4)
 - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/index.html) (>= 2.4)
 - [Outscale Access Key and Secret Key](https://wiki.outscale.net/display/EN/Creating+an+Access+Key)
 
@@ -16,9 +16,10 @@ export TF_VAR_region="eu-west-2"
 
 By editing ['terraform.tfvars'](terraform.tfvars), you can adjust the number of worker/control-plane nodes, the size of the nodes and more.
 
-# Deploy
+# Deploying infrastructure
 
-First deploy infrastructure resources:
+This step will create infrastructure components as well as configuration files needed to bootstrap cluster creation.
+
 ```
 terraform init
 terraform apply
@@ -32,37 +33,42 @@ If required, you can create an Access Rule for your Kubernetes NAT IP address:
 osc-cli api CreateApiAccessRule --Description 'Allow Kubernetes NAT IP Address' --IpRanges "[$(tf output nat_public_ip | tr -d '\n')]"
 ```
 
-Then you should be able to deploy RKE using:
+# Deploying Kubernetes cluster
+
+Once your infrastructure ready, you are ready to deploy your cluster using RKE:
 ```
 rke up --config rke/cluster.yml
+sed -i "s|server:.*$|server: \"$(cat kube-apiserver-url.txt):6443\"|" rke/kube_config_cluster.yml
 ```
 
-You can now copy your kubeconfig file to bastion host:
-```
-scp -F ssh_config rke/kube_config_cluster.yml bastion:.kube/config
-```
+Note: the `sed` command is used to setup load balancer in kubeconfig file, see [this issue](https://github.com/rancher/rke/issues/705) for more details.
 
-Then to complete the cluster initialization, install the CSI driver
-```
-ANSIBLE_CONFIG=ansible.cfg ansible-playbook osc-csi/playbook.yaml
-```
 
-Connect to bastion and test kubeapi-server:
+# Quick testing the cluster
+
+Once RKE deployment is successful, you should be able to list nodes and use your cluster.
+
 ```
-ssh -F ssh_config bastion
+export KUBECONFIG=rke/kube_config_cluster.yml
 kubectl get nodes
 ```
 
 For further testing, check [testing section](testing.md).
 
-If needed, you can connect to any worker or control-plane node:
+If needed, you can connect to any worker or control-plane node using SSH:
 ```
 ssh -F ssh_config worker-0
 ssh -F ssh_config control-plane-0
 ```
 
+# Deploy more things
+
+As this cluster to deployed on Outscale IaaS, you are probably interested to install Outscale's [Cloud Controller Manager (CCM)](../addons/ccm/README.md) and Outscale's [Cloud Storage Interface (CSI)](../addons/csi/README.md).
+
+See [/addons](../addons) for even more things to deploy (not limited to).
+
 # Cleaning Up
-First destroy your cluster using RKE:
+First destroy your cluster using RKE, this will also remove dynamically created cloud resources perfomed by CCM or CSI.
 ```
 rke remove --config rke/cluster.yml
 ```

@@ -1,0 +1,37 @@
+name: Commit Tests
+on:
+  push:
+    branches:    
+      - 'master'
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Terraform  
+      uses: hashicorp/setup-terraform@v1
+    - name: Terraform Format
+      id: fmt
+      run: terraform fmt -check
+  deploy:
+    runs-on: [self-hosted, linux]
+    needs: code-quality
+    steps:
+    - uses: actions/checkout@v2
+    - name: Deploy Cluster
+      uses: outscale-dev/osc-k8s-rke-cluster/github_actions/deploy_cluster@master
+      with:
+        repository_folder: "./"
+        osc_access_key: ${{ secrets.OSC_ACCESS_KEY }}
+        osc_secret_key: ${{ secrets.OSC_SECRET_KEY }}
+        osc_region: ${{ secrets.OSC_REGION }}
+    - name: Destroy Cluster
+      uses: outscale-dev/osc-k8s-rke-cluster/github_actions/destroy_cluster@master
+      if: ${{ always() }}
+      with:
+        repository_folder: "./"
+        osc_access_key: ${{ secrets.OSC_ACCESS_KEY }}
+        osc_secret_key: ${{ secrets.OSC_SECRET_KEY }}
+        osc_region: ${{ secrets.OSC_REGION }}
+

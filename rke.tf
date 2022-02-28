@@ -128,19 +128,12 @@ network:
   tolerations: []
 authentication:
   strategy: x509
-  sans: []
+  sans:
+${join("\n", [for i in range(var.control_plane_count) : format("   - 10.0.1.%d", 10 + i)])}
+   - ${outscale_load_balancer.lb-kube-apiserver.dns_name}
   webhook: null
 addons:
 addons_include:
-  - "${path.root}/cloud-provider-osc/secrets.yaml"
-  - "https://raw.githubusercontent.com/outscale-dev/cloud-provider-osc/v0.0.9beta/deploy/osc-ccm-manifest.yml"
-  - "${path.root}/osc-csi/secrets.yaml"
-  - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-5.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshotclasses.yaml
-  - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-5.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshotcontents.yaml
-  - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-5.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshots.yaml
-  - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-5.0/deploy/kubernetes/snapshot-controller/rbac-snapshot-controller.yaml
-  - https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-5.0/deploy/kubernetes/snapshot-controller/setup-snapshot-controller.yaml
-  - ${path.root}/rke/ingress-default-cert.yaml
 ssh_key_path: ~/.ssh/id_rsa
 ssh_cert_path:
 ssh_agent_auth: false
@@ -173,7 +166,7 @@ ingress:
   nginx_ingress_controller_priority_class_name:
 cluster_name: ${var.cluster_name}
 cloud_provider:
-  name: "external"
+${var.will_install_ccm ? "  name: \"external\"" : ""}
 prefix_path:
 win_prefix_path:
 addon_job_timeout: 0
@@ -197,5 +190,5 @@ bastion_host:
   ssh_key_path: ${path.root}/bastion/bastion.pem
 EOT
   )
-  depends_on = [local_file.cloud-provider-osc_secrets, local_file.osc-csi_secrets]
+  depends_on = [local_file.csi_secrets]
 }
