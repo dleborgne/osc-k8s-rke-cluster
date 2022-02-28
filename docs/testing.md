@@ -6,18 +6,6 @@ Smoke testing our newly created Kubernetes cluster can be done very similarely t
 
 Note that workers has no public IP so you can test Nodeport service from bastion.
 
-# CCM quicktest
-
-You can test the CCM by creating a LoadBalancer Service:
-```
-scp -F ssh_config examples/2048.yaml bastion:./
-ssh -F ssh_config bastion
-kubectl apply -f 2048.yaml
-kubectl get svc -n 2048
-```
-
-Note that load balancer may take time to expose the service.
-
 ## Sonobuoy
 
 [Sonobuoy](https://sonobuoy.io/) allow us to validate cluster configuration. Those tests can be run from bastion and can be pretty long to end (can take 2h), make sure that your kubectl is configured.
@@ -36,16 +24,26 @@ sudo mv sonobuoy /usr/local/bin/
 Finally, you can run tests and retrieve results:
 
 ```
-sonobuoy run --wait
+sonobuoy run --wait  --e2e-skip "Ingress API should support creating Ingress API operations|ServiceAccountIssuerDiscovery should support OIDC discovery of service account issuer|\[Disruptive\]|NoExecuteTaintManager"
 results=$(sonobuoy retrieve)
 sonobuoy results $results
 ```
+
+> **NOTE**: 
+> 
+> These two first tests are skipped because
+> -  `Ingress API should support creating Ingress API operations`: the ingress controller does not accept duplicate ingress with different namespaces
+> -  `ServiceAccounts ServiceAccountIssuerDiscovery should support OIDC discovery of service account issuer`: the OIDC is not enabled in our cluster
+> 
+> The two last are the default value.
 
 To get more details about failed tests:
 ```
 outfile=$(sonobuoy retrieve)
 sonobuoy results --mode detailed --plugin e2e $outfile |  jq '.  | select(.status == "failed") | .details'
 ```
+
+To get the logs of the e2e, you can find the logs file inside the archive with the path: `plugins/e2e/results/global/e2e.log`.
 
 In order to re-run a specific test:
 ```

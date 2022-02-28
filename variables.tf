@@ -15,3 +15,4 @@ variable "trusted_ip" {
     "0.0.0.0/0"
   ]
 }
+variable "will_install_ccm" {}
